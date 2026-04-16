@@ -1098,42 +1098,33 @@ const EMICalc = (function () {
 /* ══════════════════════════════════════════════════════════════
    MODULE 9: CURRENCY CONVERTER (Offline Demo)
    ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   MODULE 9: CURRENCY CONVERTER (REAL-TIME API)
+   ══════════════════════════════════════════════════════════════ */
 const CurrencyConverter = (function () {
 
-  /**
-   * Static exchange rates — USD as base (approximate reference rates)
-   * For a production app, these would be fetched from an API
-   */
-  const RATES = {
-    USD: { name: 'US Dollar',          symbol: '$',   rate: 1       },
-    EUR: { name: 'Euro',               symbol: '€',   rate: 0.9215  },
-    GBP: { name: 'British Pound',      symbol: '£',   rate: 0.7890  },
-    INR: { name: 'Indian Rupee',       symbol: '₹',   rate: 83.12   },
-    JPY: { name: 'Japanese Yen',       symbol: '¥',   rate: 149.50  },
-    CNY: { name: 'Chinese Yuan',       symbol: '¥',   rate: 7.24    },
-    AUD: { name: 'Australian Dollar',  symbol: 'A$',  rate: 1.5385  },
-    CAD: { name: 'Canadian Dollar',    symbol: 'C$',  rate: 1.3640  },
-    CHF: { name: 'Swiss Franc',        symbol: 'Fr',  rate: 0.8930  },
-    SGD: { name: 'Singapore Dollar',   symbol: 'S$',  rate: 1.3440  },
-    HKD: { name: 'Hong Kong Dollar',   symbol: 'HK$', rate: 7.8240  },
-    MYR: { name: 'Malaysian Ringgit',  symbol: 'RM',  rate: 4.7100  },
-    SAR: { name: 'Saudi Riyal',        symbol: '﷼',  rate: 3.7500  },
-    AED: { name: 'UAE Dirham',         symbol: 'د.إ', rate: 3.6725  },
-    KRW: { name: 'South Korean Won',   symbol: '₩',   rate: 1330.0  },
-    BRL: { name: 'Brazilian Real',     symbol: 'R$',  rate: 4.9750  },
-    ZAR: { name: 'South African Rand', symbol: 'R',   rate: 18.750  },
-  };
+  let rates = {};
+  let base = 'USD';
 
-  /**
-   * Convert amount from one currency to another
-   * All conversions go through USD as intermediate base
-   */
-  function convert(amount, fromCode, toCode) {
-    const from = RATES[fromCode];
-    const to   = RATES[toCode];
-    if (!from || !to || isNaN(amount)) return NaN;
-    const inUSD = amount / from.rate;
-    return inUSD * to.rate;
+  const API_URL = 'https://api.exchangerate.host/latest';
+
+  async function fetchRates() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      rates = data.rates || {};
+      base  = data.base || 'USD';
+      populateSelects();
+    } catch (err) {
+      Utils.toast('Failed to load live currency rates');
+      console.error(err);
+    }
+  }
+
+  function convert(amount, from, to) {
+    if (!rates[from] || !rates[to] || isNaN(amount)) return NaN;
+    const usd = amount / rates[from];
+    return usd * rates[to];
   }
 
   function populateSelects() {
@@ -1141,51 +1132,42 @@ const CurrencyConverter = (function () {
     const toSel   = document.getElementById('toCurr');
     if (!fromSel || !toSel) return;
 
-    const options = Object.entries(RATES)
-      .map(([code, d]) => `<option value="${code}">${code} — ${d.name}</option>`)
+    const opts = Object.keys(rates)
+      .sort()
+      .map(c => `<option value="${c}">${c}</option>`)
       .join('');
 
-    fromSel.innerHTML = options;
-    toSel.innerHTML   = options;
+    fromSel.innerHTML = opts;
+    toSel.innerHTML   = opts;
+
     fromSel.value = 'USD';
     toSel.value   = 'INR';
   }
 
   function doConvert() {
-    const amount   = Utils.parseNum(document.getElementById('currAmount').value);
-    const fromCode = document.getElementById('fromCurr').value;
-    const toCode   = document.getElementById('toCurr').value;
+    const amt = Utils.parseNum(document.getElementById('currInput').value);
+    const from = document.getElementById('fromCurr').value;
+    const to   = document.getElementById('toCurr').value;
+    const out  = document.getElementById('currResult');
 
-    if (isNaN(amount) || amount < 0) { Utils.toast('Enter a valid amount'); return; }
+    if (isNaN(amt)) {
+      Utils.toast('Enter a valid amount');
+      return;
+    }
 
-    const result = convert(amount, fromCode, toCode);
-    const from   = RATES[fromCode];
-    const to     = RATES[toCode];
+    const result = convert(amt, from, to);
+    if (isNaN(result)) {
+      out.textContent = 'Conversion failed';
+      return;
+    }
 
-    document.getElementById('currResult').textContent =
-      `${from.symbol}${amount.toLocaleString()} = ${to.symbol}${parseFloat(result.toFixed(4)).toLocaleString()}`;
-    document.getElementById('currRate').textContent =
-      `1 ${fromCode} = ${parseFloat((RATES[toCode].rate / RATES[fromCode].rate).toFixed(6))} ${toCode} (reference rate)`;
-
-    // Show quick reference grid for common currencies from the fromCode
-    const topCodes = ['USD','EUR','GBP','INR','JPY','AUD','CAD','SGD'];
-    const inFrom = 1;
-    document.getElementById('currGrid').innerHTML = topCodes.map(code => {
-      const val = convert(inFrom, fromCode, code);
-      return `<div class="curr-chip"><div class="code">${code}</div><div class="rate">${parseFloat(val.toFixed(4))}</div></div>`;
-    }).join('');
-
-    History.add(`${amount} ${fromCode} → ${toCode}`, `${to.symbol}${parseFloat(result.toFixed(2))}`);
+    out.textContent = `${amt} ${from} = ${result.toFixed(4)} ${to}`;
+    History.add(`${amt} ${from} → ${to}`, result.toFixed(4));
   }
 
   function init() {
-    populateSelects();
-    document.getElementById('convertCurr')?.addEventListener('click', doConvert);
-    document.getElementById('swapCurr')?.addEventListener('click', function () {
-      const f = document.getElementById('fromCurr');
-      const t = document.getElementById('toCurr');
-      const tmp = f.value; f.value = t.value; t.value = tmp;
-    });
+    fetchRates();
+    document.getElementById('convertCurrency')?.addEventListener('click', doConvert);
   }
 
   return { init };
