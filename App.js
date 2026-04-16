@@ -1106,22 +1106,22 @@ const CurrencyConverter = (function () {
    */
   const RATES = {
     USD: { name: 'US Dollar',          symbol: '$',   rate: 1       },
-    EUR: { name: 'Euro',               symbol: '€',   rate: 0.847   },
-    GBP: { name: 'British Pound',      symbol: '£',   rate: 0.737   },
-    INR: { name: 'Indian Rupee',       symbol: '₹',   rate: 93.3    },
-    JPY: { name: 'Japanese Yen',       symbol: '¥',   rate: 159.0   },
-    CNY: { name: 'Chinese Yuan',       symbol: '¥',   rate: 6.82    },
-    AUD: { name: 'Australian Dollar',  symbol: 'A$',  rate: 1.39    },
-    CAD: { name: 'Canadian Dollar',    symbol: 'C$',  rate: 1.37    },
-    CHF: { name: 'Swiss Franc',        symbol: 'Fr',  rate: 0.782   },
-    SGD: { name: 'Singapore Dollar',   symbol: 'S$',  rate: 1.27    },
-    HKD: { name: 'Hong Kong Dollar',   symbol: 'HK$', rate: 7.83    },
-    MYR: { name: 'Malaysian Ringgit',  symbol: 'RM',  rate: 4.63      },
-    SAR: { name: 'Saudi Riyal',        symbol: '﷼',  rate: 3.75     },
-    AED: { name: 'UAE Dirham',         symbol: 'د.إ', rate: 3.67    },
-    KRW: { name: 'South Korean Won',   symbol: '₩',   rate: 1510.0  },
-    BRL: { name: 'Brazilian Real',     symbol: 'R$',  rate: 5.16    },
-    ZAR: { name: 'South African Rand', symbol: 'R',   rate: 16.8    },
+    EUR: { name: 'Euro',               symbol: '€',   rate: 0.9215  },
+    GBP: { name: 'British Pound',      symbol: '£',   rate: 0.7890  },
+    INR: { name: 'Indian Rupee',       symbol: '₹',   rate: 83.12   },
+    JPY: { name: 'Japanese Yen',       symbol: '¥',   rate: 149.50  },
+    CNY: { name: 'Chinese Yuan',       symbol: '¥',   rate: 7.24    },
+    AUD: { name: 'Australian Dollar',  symbol: 'A$',  rate: 1.5385  },
+    CAD: { name: 'Canadian Dollar',    symbol: 'C$',  rate: 1.3640  },
+    CHF: { name: 'Swiss Franc',        symbol: 'Fr',  rate: 0.8930  },
+    SGD: { name: 'Singapore Dollar',   symbol: 'S$',  rate: 1.3440  },
+    HKD: { name: 'Hong Kong Dollar',   symbol: 'HK$', rate: 7.8240  },
+    MYR: { name: 'Malaysian Ringgit',  symbol: 'RM',  rate: 4.7100  },
+    SAR: { name: 'Saudi Riyal',        symbol: '﷼',  rate: 3.7500  },
+    AED: { name: 'UAE Dirham',         symbol: 'د.إ', rate: 3.6725  },
+    KRW: { name: 'South Korean Won',   symbol: '₩',   rate: 1330.0  },
+    BRL: { name: 'Brazilian Real',     symbol: 'R$',  rate: 4.9750  },
+    ZAR: { name: 'South African Rand', symbol: 'R',   rate: 18.750  },
   };
 
   /**
@@ -1233,7 +1233,15 @@ const UI = (function () {
   }
 
   /** Splash screen dismissal */
-  function hideSplash() { document.getElementById('splash').classList.add('hidden'); }   
+  function hideSplash() {
+    const splash = document.getElementById('splash');
+    const app    = document.getElementById('app');
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.classList.add('hidden');
+      app.classList.remove('hidden');
+    }, 500);
+  }
 
   function init() {
     // Apply saved theme
