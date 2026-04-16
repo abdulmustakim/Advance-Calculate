@@ -1233,15 +1233,7 @@ const UI = (function () {
   }
 
   /** Splash screen dismissal */
-  function hideSplash() {
-    const splash = document.getElementById('splash');
-    const app    = document.getElementById('app');
-    splash.classList.add('fade-out');
-    setTimeout(() => {
-      splash.classList.add('hidden');
-      app.classList.remove('hidden');
-    }, 500);
-  }
+  function hideSplash() { document.getElementById('splash').classList.add('hidden'); }   
 
   function init() {
     // Apply saved theme
